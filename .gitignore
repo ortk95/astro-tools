@@ -1,0 +1,12 @@
+# Ignore everything...
+*
+
+# ... except useful filetypes...
+!*.py
+!*.md
+
+# ... and except subdirectories ...
+!*/
+
+# ... and keep useful git files.
+!.gitignore
