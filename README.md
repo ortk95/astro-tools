@@ -72,7 +72,7 @@ import tools
 ```
 
 ### Scripts
-Scripts in the [root directory](./) use general functions from `tools` to carry out specific tasks.
+Scripts in the root directory use general functions from `tools` to carry out specific tasks.
 
 * [`find_observing_times.py`](find_observing_times.py) uses ephemeris information to identify good observing times for a specific target and location.
 * [`sphere_time_calculation.py`](sphere_time_calculation.py) simplifies calculation of observing times for the VLT/SPHERE instrument.
