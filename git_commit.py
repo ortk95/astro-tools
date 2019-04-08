@@ -14,6 +14,11 @@ If the commit message is not given, the code will prompt for it.
 
 The remote name for the git directory should be specified below.
 """
+
+__version__ = '1.0'
+__date__ = '2019-04-08'
+__author__ = 'Oliver King'
+
 import os
 import sys
 import subprocess
@@ -22,7 +27,7 @@ from subprocess import CalledProcessError
 
 # Change REMOTE_NAME to the name of your remote branch in git (often 'origin').
 # This needs to be set up using git command line with `git remote add ...` e.g.
-# $ git remote add github https://github.com/ortk95/astro-code.git
+# $ git remote add github https://github.com/ortk95/astro-tools.git
 REMOTE_NAME = 'github'
 
 
