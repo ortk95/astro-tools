@@ -61,7 +61,55 @@ The tools module is split into a series of sub-modules, each with a functions ba
 [`script`](tools/script.py) | General functions, e.g. `cprint()` to print colourful text, `progress_bar()` to print a progress bar, `sort_mixed()` to sort a list of strings correctly by numerical value.
 [`path`](tools/path.py) | Submodule to define, generate and set file paths from a single location.
 
-See the source code and associated docstring documentation for all the functions contained in `tools`.
+See the source code and associated docstring documentation for all the functions contained in `tools`. To see a summary of all the functions contained in each module, use the Python [`help()`](https://docs.python.org/3/library/functions.html#help) function:
+
+```
+>>> import tools
+>>> help(tools.science)
+Help on module tools.science in tools:
+
+NAME
+    tools.science - Various scientific functions.
+
+DESCRIPTION
+    Assume wavelengths are in microns, all other values are SI.
+
+FUNCTIONS
+    absolute_to_apparent_magnitude(abs_mag, d_au)
+        Converts absolute magnitude to apparent magnitude.
+        
+        Parameters
+        ----------
+        abs_mag : float
+            Absolute magnitude.
+        
+        d_au : float
+            Distance in AU.
+        
+        Returns
+        -------
+        float
+    
+    convolve_airy_disc(img, radius, **kwargs)
+        Convolve airy disc of given radius with image.
+        
+        Parameters
+        ----------
+        img : array
+            Image to convolve airy disc to. If cube, convolution applied to each
+            frame independently.
+        
+        radius : float or int
+            Radius of airy disc.
+        
+        kwargs
+            Additional arguments passed to astropy.convolution.convolve_fft().
+        
+        Returns
+        -------
+        Convolved image.
+...
+```
 
 Note that `import tools` will only work if the `tools` directory is on the system path (i.e. the parent directory of `tools` is present in `sys.path`). This can be achieved by placing the `tools` directory in the current working directory (like for the example scripts below). This can also be achieved by manually adding the parent directory to the system path:
 
