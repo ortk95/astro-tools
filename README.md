@@ -14,6 +14,7 @@ The Python packages required for running all functions are:
 * [Astroquery](https://astroquery.readthedocs.io/en/latest/)
 * [Photutils](https://photutils.readthedocs.io/en/stable/)
 * [PIL](http://www.pythonware.com/products/pil/)
+* [Cartopy](https://scitools.org.uk/cartopy/docs/latest/)
 * [BibtexParser](https://bibtexparser.readthedocs.io/en/master/)
 * [Miepython](https://github.com/scottprahl/miepython)
 
@@ -125,4 +126,8 @@ Scripts in the root directory use general functions from `tools` to carry out sp
 * [`find_observing_times.py`](find_observing_times.py) uses ephemeris information to identify good observing times for a specific target and location.
 * [`sphere_time_calculation.py`](sphere_time_calculation.py) simplifies calculation of observing times for the VLT/SPHERE instrument.
 * [`time_code.py`](time_code.py) allows easy comparison of the execution times of code snippets.
-*  [`git_commit.py`](git_commit.py) can be used to simplify the process of creating git commits and pushing them to a remote branch (e.g. GitHub). It is self-contained (i.e. it does not use the `tools` module), so can be downloaded and used as a stand-alone script. See the docstrings in the file for more details.
+
+The following scripts do not use any functions from `tools`, so can be downloaded and run independently as standalone scripts.
+
+*  [`git_commit.py`](git_commit.py) can be used to simplify the process of creating git commits and pushing them to a remote branch (e.g. GitHub). See the docstrings in the file for more details.
+*  [`animate_globe.py`](animate_globe.py) projects mapped data onto a globe and creates an animation from the rotation of the globe.
