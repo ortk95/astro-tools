@@ -39,7 +39,7 @@ maths
     Mathematical functions and useful routines to extend numpy-like behaviour.
 """
 
-__version__ = '1.1'
+__version__ = '1.2'
 __date__ = '2020-01-28'
 __author__ = 'Oliver King'
 

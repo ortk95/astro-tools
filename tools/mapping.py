@@ -214,8 +214,7 @@ def get_disc(img, com=None, r0=None):
 
     return x0, y0, r0
 
-
-def get_solar_angles(hdr):
+def get_solar_angles(hdr, **kwargs):
     """
     Get solar angles from ephemerides for observation.
 
@@ -228,11 +227,10 @@ def get_solar_angles(hdr):
     -------
     theta_i, phi_i
     """
-    eph = get_ephemerides(hdr)
-    np_ang = correct_angle(hdr, -float(eph['NPole_ang']))
+    eph = get_ephemerides(hdr, **kwargs)
     theta_i = -float(eph['alpha'])
     ss_ang = correct_angle(hdr, -float(eph['SubSol_ang']))
-    phi_i = 90 + np_ang + ss_ang
+    phi_i = -(90 + ss_ang)
     theta_i %= 360
     phi_i %= 360
     return theta_i, phi_i
@@ -362,7 +360,7 @@ def img_to_longlat(shape, x0, y0, r0, n_angle, obs_long, obs_lat):
         Images of geographic coordinates of observed planetary disc. Points
         outside the disc are given as NaN.
     """
-    x_img, y_img, z_img = tools.mapping.img_to_xyz(shape, x0, y0, r0)
+    x_img, y_img, z_img = img_to_xyz(shape, x0, y0, r0)
     return xyz_to_longlat(x_img, y_img, z_img, n_angle, obs_long, obs_lat)
 
 
