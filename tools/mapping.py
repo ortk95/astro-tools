@@ -238,6 +238,134 @@ def get_solar_angles(hdr):
     return theta_i, phi_i
 
 
+def map_observation(img, x0, y0, r0, n_angle, obs_long, obs_lat, **kwargs):
+    """
+    Projects observed planetary disc into an equirectangular map.
+
+    Assumes planetary disc is observed from an infinite distance and is
+    therefore an orthographic coordinate projection:
+    https://en.wikipedia.org/wiki/Orthographic_projection_in_cartography
+
+    The returned map is an equirectangular/cylindrical projection with rows of
+    constant latitude and columns of constant longitude.
+    https://en.wikipedia.org/wiki/Equirectangular_projection
+
+    All angles must be given in degrees.
+
+    Parameters
+    ----------
+    img : array
+        Observed image. Must be a 2D image or 3D data cube (where the first
+        axis is the spectral dimension).
+
+    x0, y0 : float
+        Pixel coordinates of centre of planetary disc in observed image.
+
+    r0 : float
+        Pixel radius of planetary disc in observed image.
+
+    n_angle : float
+        Angle in degrees of planet's north pole from the top of the observed
+        image.
+
+    obs_long, obs_lat : float
+        Sub-observer longitude and latitude in degrees. These are the
+        geographic coordinates of point in the centre of the observed disc
+        given by pixel coordinates (x0, y0).
+
+    **kwargs
+        Additional keyword arguments are passed to longlat_to_map()
+
+    Returns
+    -------
+    map_img : array
+        Equirectangular projected mapped image. Unmapped areas have a value of
+        NaN.
+
+    long_arr : array
+        Arrays of longitude coordinates in degrees corresponding to columns of
+        map_img.
+
+    lat_arr : array
+        Arrays of latitude coordinates in degrees corresponding to rows of
+        map_img.
+    """
+    shape = img.shape
+    if len(shape) == 3:
+        shape = shape[1:]
+    long_img, lat_img = img_to_longlat(shape, x0, y0, r0, n_angle, obs_long, obs_lat)
+    return longlat_to_map(img, long_img, lat_img, obs_long=obs_long, **kwargs)
+
+
+def img_to_xyz(shape, x0, y0, r0):
+    """
+    Create coordinates images for an observed planetary disc.
+
+    Parameters
+    ----------
+    shape
+        Shape of observed image.
+
+    x0, y0 : float
+        Pixel coordinates of centre of planetary disc in observed image.
+
+    r0 : float
+        Pixel radius of planetary disc in observed image.
+
+    Returns
+    -------
+    x_img, y_img, z_img: array
+        Images of (x, y, z) coordinates of observed planetary disc. Points
+        outside the disc are given as NaN. Coordinates are given as fractions
+        of the planetary radius.
+    """
+    x_img, y_img = np.meshgrid(np.arange(shape[1]) - x0, np.arange(shape[0]) - y0)
+    r_img = np.sqrt(x_img**2 + y_img**2)
+    x_img /= r0
+    y_img /= r0
+    z_img = 1 - r_img/r0
+    x_img[np.where(r_img > r0)] = np.nan
+    y_img[np.where(r_img > r0)] = np.nan
+    z_img[np.where(r_img > r0)] = np.nan
+    return x_img, y_img, z_img
+
+
+def img_to_longlat(shape, x0, y0, r0, n_angle, obs_long, obs_lat):
+    """
+    Create geographic coordinate images for an observed planetary disc.
+
+    All angles must be given in degrees.
+
+    Parameters
+    ----------
+    shape
+        Shape of observed image.
+
+    x0, y0 : float
+        Pixel coordinates of centre of planetary disc in observed image.
+
+    r0 : float
+        Pixel radius of planetary disc in observed image.
+
+    n_angle : float
+        Angle in degrees of planet's north pole from the top of the observed
+        image.
+
+    obs_long, obs_lat : float
+        Sub-observer longitude and latitude in degrees. These are the
+        geographic coordinates of point in the centre of the observed disc
+        given by pixel coordinates (x0, y0).
+
+    Returns
+    -------
+    long_img, lat_img : array
+        Images of geographic coordinates of observed planetary disc. Points
+        outside the disc are given as NaN.
+    """
+    x_img, y_img, z_img = tools.mapping.img_to_xyz(shape, x0, y0, r0)
+    return xyz_to_longlat(x_img, y_img, z_img, n_angle, obs_long, obs_lat)
+
+
 def longlat_to_map(img, long_img, lat_img, method='linear', ppd=4, visualise=False, obs_long=None,
                    print_progress=True):
     """
@@ -246,7 +374,7 @@ def longlat_to_map(img, long_img, lat_img, method='linear', ppd=4, visualise=Fal
     Parameters
     ----------
     img : array
-        Image to project into a map. If cube, projects each part seperately.
+        Image to project into a map. If cube, projects each part separately.
 
     long_img, lat_img : array
         Image of long/lat values of each pixel in `img`.
@@ -282,9 +410,7 @@ def longlat_to_map(img, long_img, lat_img, method='linear', ppd=4, visualise=Fal
 
     if obs_long is not None:
         # Shift coordinate system so that map part of image is in centre to avoid wraparound
-        # effects. May still get effects for large inclination (i.e. when looking 'over' a pole),
-        # but this doesn't seem to be an issue with the current dataset and should be okay for
-        # general Earth-based observations.
+        # effects.
         obs_long = int(obs_long + 180) % 360
         long_arr = (long_arr - obs_long) % 360
         long_arr_in = (long_arr_in - obs_long) % 360
@@ -301,7 +427,7 @@ def longlat_to_map(img, long_img, lat_img, method='linear', ppd=4, visualise=Fal
         cube = [img]
     cube_arrs_in = [f[np.where(~np.isnan(lat_img) & ~np.isnan(long_img))] for f in cube]
 
-    # Following line is bottleneck for mapping procedure.
+    # Following lines are bottleneck for mapping procedure
     map_cube = np.zeros((len(cube_arrs_in), len(lat_arr), len(long_arr)))
     for idx, f in enumerate(cube_arrs_in):
         map_cube[idx] = scipy.interpolate.griddata(points, f, (long_grd, lat_grd), method=method)
@@ -372,7 +498,6 @@ def xyz_to_longlat(x_img, y_img, z_img, n_angle, obs_long, obs_lat, degrees=True
     coords = np.array([np.dot(M, c) for c in coords])
     x_img = coords[:, 0].reshape(x_img.shape)
     y_img = coords[:, 1].reshape(y_img.shape)
-    # z_img = coords[:, 2].reshape(z_img.shape)
 
     # Carry out transformation to orthographic projection using formulae from Wikipedia
     with np.errstate(divide='ignore', invalid='ignore'):
@@ -381,6 +506,11 @@ def xyz_to_longlat(x_img, y_img, z_img, n_angle, obs_long, obs_lat, degrees=True
         c_img = np.arcsin(r_img)
         lat_img = np.arcsin(np.cos(c_img)*np.sin(obs_lat)
                             + y_img*np.sin(c_img)*np.cos(obs_lat)/r_img)
+        if 0 in r_img:
+            # Deal with pixels where 0/0 causes a value of NaN
+            lat_img[np.where(r_img == 0)] = np.arcsin(
+                np.cos(c_img)*np.sin(obs_lat))[np.where(r_img == 0)]
+
         long_img = obs_long + np.arctan2(x_img*np.sin(c_img),
                                          (r_img*np.cos(c_img)*np.cos(obs_lat)
                                              - y_img*np.sin(c_img)*np.sin(obs_lat)))
@@ -401,7 +531,7 @@ def xyz_to_thetaphi(x_img, y_img, z_img, theta=0, phi=0, degrees=True):
         Images of xyz coordinates (in units of moon radii).
 
     theta, phi : float
-        Rotation of coordinate syste.
+        Rotation of coordinate system.
 
     degrees : bool
         Toggle units.
@@ -423,6 +553,7 @@ def xyz_to_thetaphi(x_img, y_img, z_img, theta=0, phi=0, degrees=True):
     x_img = coords[:, 0].reshape(x_img.shape)
     y_img = coords[:, 1].reshape(y_img.shape)
     z_img = coords[:, 2].reshape(z_img.shape)
+    z_img = np.clip(z_img, None, 1)
     with np.errstate(divide='ignore', invalid='ignore'):
         theta_img = np.arccos(z_img)
         phi_img = np.arctan2(y_img, x_img)
