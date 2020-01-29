@@ -321,7 +321,7 @@ def img_to_xyz(shape, x0, y0, r0):
     r_img = np.sqrt(x_img**2 + y_img**2)
     x_img /= r0
     y_img /= r0
-    z_img = 1 - r_img/r0
+    z_img = np.sqrt(1 - x_img**2 - y_img**2)
     x_img[np.where(r_img > r0)] = np.nan
     y_img[np.where(r_img > r0)] = np.nan
     z_img[np.where(r_img > r0)] = np.nan
