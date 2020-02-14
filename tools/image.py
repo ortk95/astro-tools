@@ -1307,10 +1307,11 @@ def interp_image(img, value, method='linear'):
     shape = img.shape
     if len(shape) > 2:
         return np.array([interp_image(frame, value, method) for frame in img])
-    x1 = np.linspace(0, 1, shape[0])
-    y1 = np.linspace(0, 1, shape[1])
-    x2 = np.linspace(0, 1, shape[0]*value)
-    y2 = np.linspace(0, 1, shape[1]*value)
+    shp_y, shp_x = shape
+    x1 = np.linspace(0, 1, shp_x)
+    y1 = np.linspace(0, 1, shp_y)
+    x2 = np.linspace(0, 1, round(shp_x*value))
+    y2 = np.linspace(0, 1, round(shp_y*value))
     img = interp2d(x1, y1, img, kind=method)(x2, y2)
     if nan_img:
         mask = interp_image(mask, value, method)
